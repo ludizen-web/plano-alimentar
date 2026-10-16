@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Plano Alimentar</title>
+<meta name="theme-color" content="#A12D58">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Plano">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: uma coluna do tamanho do celular; refeições numa lista única, água como fileira de copos; abas fixas embaixo */
+:root{
+  --bg:#F1F4EF;
+  --surface:#FFFFFF;
+  --sunk:#F6F8F4;
+  --ink:#18241D;
+  --muted:#5B6960;
+  --line:#DCE3DA;
+  --line-strong:#B4BFB4;
+  --accent:#A12D58;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#F8E6ED;
+  --water:#2A74AD;
+  --water-soft:#DCEBF6;
+  --display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --body:"Figtree",-apple-system,"Segoe UI",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0F1411;--surface:#18201B;--sunk:#131A16;--ink:#E6ECE7;--muted:#97A49B;
+    --line:#28322C;--line-strong:#46534B;--accent:#E8779C;--accent-ink:#2B0A17;
+    --accent-soft:#3A1A27;--water:#6AB0E0;--water-soft:#14283A;color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
+
+.app{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+.eyebrow{margin:0;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,8vw,36px);line-height:1.04;letter-spacing:-.02em;margin:6px 0 0;text-wrap:balance}
+h2{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.01em;margin:0}
+.lead{margin:10px 0 0;color:var(--muted);max-width:60ch}
+.top{display:grid}
+.chip{justify-self:start;margin-top:10px;border:1px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:14px;font-weight:600;cursor:pointer}
+
+/* instalar */
+.install{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;display:grid;gap:8px;font-size:15px}
+.install p{margin:0}
+.install .row{display:flex;gap:8px;flex-wrap:wrap}
+
+/* semana */
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;margin-top:16px}
+.day{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0 8px;border:0;border-radius:14px;background:transparent;color:var(--muted);cursor:pointer}
+.day .wd{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.ring{position:relative;width:38px;height:38px;display:block}
+.ring svg{position:absolute;inset:0;width:100%;height:100%}
+.ring-bg{fill:none;stroke:var(--line);stroke-width:3}
+.ring-fg{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
+.day[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+
+/* seções */
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:28px 2px 10px}
+.count{font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.count b{color:var(--ink)}
+
+/* refeições */
+.meals{background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.meal + .meal{border-top:1px solid var(--line)}
+.meal-head{display:flex;align-items:center;gap:6px;padding:8px 10px 8px 6px}
+.check{flex:none;width:44px;height:44px;display:grid;place-items:center;border:0;background:none;padding:0;cursor:pointer;border-radius:50%}
+.check .dot{width:30px;height:30px;border-radius:50%;border:2px solid var(--line-strong);display:grid;place-items:center;color:transparent;transition:background .15s,border-color .15s}
+.check[aria-pressed="true"] .dot{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.meal-open{flex:1;min-width:0;display:flex;align-items:center;gap:8px;border:0;background:none;padding:6px 0;text-align:left;cursor:pointer}
+.meal-txt{display:grid;min-width:0;flex:1}
+.meal-name{font-weight:700;font-size:17px;line-height:1.2}
+.meal-sub{font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meal.done .meal-sub{color:var(--accent);font-weight:600}
+.chev{flex:none;color:var(--muted);transition:transform .2s}
+.meal-open[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.meal-body{padding:2px 12px 14px;display:grid;gap:10px}
+.meal.extra{background:var(--sunk)}
+.meal.extra .meal-name{font-size:15px}
+
+.opt{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--sunk);min-width:0}
+.opt.chosen{border-color:var(--accent);background:var(--accent-soft)}
+.opt h3{font-family:var(--display);font-weight:700;font-size:18px;line-height:1.2;margin:0 0 8px;text-wrap:balance}
+.items{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.items li{position:relative;padding-left:16px}
+.items li::before{content:"";position:absolute;left:2px;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--line-strong)}
+.q{font-weight:700;font-variant-numeric:tabular-nums}
+.ou{display:inline-block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);border:1px solid var(--line-strong);border-radius:999px;padding:0 6px;margin:0 3px;line-height:16px;vertical-align:1px}
+details.more{margin-top:10px;border-top:1px dashed var(--line-strong);padding-top:8px}
+details.more > summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--accent);list-style:none;display:flex;align-items:center;gap:6px;padding:4px 0}
+details.more > summary::-webkit-details-marker{display:none}
+details.more > summary::before{content:"+";display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor;font-size:13px;line-height:1}
+details.more[open] > summary::before{content:"−"}
+.how{display:grid;gap:8px;font-size:15px;padding-top:4px}
+.how p{margin:0;max-width:62ch}
+.portions{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);column-gap:18px;font-size:15px}
+.portions.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.portions li{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px dotted var(--line-strong)}
+.portions li span{min-width:0}
+.portions li b{white-space:nowrap;font-variant-numeric:tabular-nums}
+.pick{margin-top:12px;width:100%;min-height:46px;border-radius:12px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.pick[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.note{margin:0;font-size:14px;color:var(--muted);padding:0 4px}
+
+/* água */
+.water{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px}
+.water-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.water-num{font-family:var(--display);font-weight:800;font-size:38px;line-height:1;color:var(--water);font-variant-numeric:tabular-nums}
+.water-num small{font-family:var(--body);font-size:16px;font-weight:600;color:var(--muted)}
+.water-left{font-size:14px;color:var(--muted);text-align:right}
+.water-left b{color:var(--ink)}
+.cups{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-top:14px}
+.cup{border:0;background:none;padding:4px 2px;cursor:pointer;border-radius:10px;aspect-ratio:4/5;max-width:100%}
+.cup svg{width:100%;height:100%;display:block}
+.cup path{fill:transparent;stroke:var(--line-strong);stroke-width:1.6;stroke-linejoin:round;transition:fill .15s,stroke .15s}
+.cup.full path{fill:var(--water);stroke:var(--water)}
+.water-actions{display:flex;gap:8px;margin-top:12px}
+.wbtn{flex:1 1 0;min-width:0;min-height:44px;border-radius:12px;border:1.5px solid var(--water);background:var(--water-soft);color:var(--ink);font-weight:700;cursor:pointer;font-variant-numeric:tabular-nums}
+.wbtn.minus{flex:0 0 56px;background:transparent;border-color:var(--line-strong)}
+.hint{margin:10px 0 0;font-size:13px;color:var(--muted)}
+.foot{margin:28px 2px 0;font-size:13px;color:var(--muted)}
+
+/* trocas e orientações */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:6px 16px 10px}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left;padding:10px 0 8px;border-bottom:1px solid var(--line)}
+td{padding:9px 0;border-bottom:1px dotted var(--line-strong)}
+tr:last-child td{border-bottom:0}
+th.n,td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;padding-left:12px}
+td.n{font-weight:700}
+td.none{color:var(--muted);font-weight:500}
+.sec-note{margin:8px 4px 0;font-size:13px;color:var(--muted)}
+.rules{list-style:none;margin:0;padding:0}
+.rules li{display:grid;gap:2px;padding:12px 0;border-bottom:1px solid var(--line)}
+.rules li:last-child{border-bottom:0}
+.rules span{color:var(--muted)}
+
+/* editor */
+.ed{display:grid;gap:12px}
+.ed-card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px;display:grid;gap:12px;min-width:0}
+.f{display:grid;gap:4px;font-size:13px;font-weight:600;color:var(--muted);min-width:0}
+.f small{font-weight:500}
+.t{font:inherit;font-size:16px;color:var(--ink);background:var(--sunk);border:1px solid var(--line-strong);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+textarea.t{min-height:96px;resize:vertical;line-height:1.4}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+details.ed-meal{background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+details.ed-meal > summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:700;font-size:17px}
+details.ed-meal > summary::-webkit-details-marker{display:none}
+details.ed-meal > summary span{font-weight:600;font-size:14px;color:var(--muted)}
+details.ed-meal[open] > summary{border-bottom:1px solid var(--line)}
+.ed-meal-body{padding:14px;display:grid;gap:12px}
+.ed-opt{border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:10px;background:var(--sunk)}
+.ed-opt .t{background:var(--surface)}
+.ed-opt-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.checks{display:flex;flex-wrap:wrap;gap:6px}
+.checks label{display:flex;gap:6px;align-items:center;font-size:14px;border:1px solid var(--line-strong);border-radius:999px;padding:6px 10px;color:var(--ink);background:var(--surface);cursor:pointer}
+.checks input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+.btn{min-height:44px;border-radius:12px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);font-weight:700;padding:0 14px;cursor:pointer}
+.btn.solid{background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{border-color:var(--line-strong);color:var(--muted)}
+.btn.small{min-height:34px;padding:0 10px;font-size:13px;border-radius:10px}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.saved{font-size:13px;color:var(--muted);margin:8px 2px 0}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;z-index:20;max-width:calc(100% - 32px)}
+
+/* abas */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--surface);border-top:1px solid var(--line);padding:4px max(8px,env(safe-area-inset-right,0px)) calc(4px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+.tabbar-in{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));max-width:560px;margin:0 auto}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0 4px;border:0;background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer}
+.tab svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab[aria-selected="true"]{color:var(--accent)}
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important;scroll-behavior:auto!important}}
+@media (max-width:360px){.portions.two,.grid2{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <section id="view-hoje" aria-label="Hoje"></section>
+  <section id="view-trocas" aria-label="Trocas" hidden></section>
+  <section id="view-dicas" aria-label="Orientações" hidden></section>
+  <section id="view-editar" aria-label="Editar plano" hidden></section>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<nav class="tabbar" aria-label="Seções">
+  <div class="tabbar-in" role="tablist">
+    <button class="tab" id="tab-hoje" role="tab" data-tab="hoje" aria-selected="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/></svg>Hoje
+    </button>
+    <button class="tab" id="tab-trocas" role="tab" data-tab="trocas" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h13M15 4.5 18.5 8 15 11.5M19 16H6M9 12.5 5.5 16 9 19.5"/></svg>Trocas
+    </button>
+    <button class="tab" id="tab-dicas" role="tab" data-tab="dicas" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6.5h10M9.5 12h10M9.5 17.5h10"/><path d="M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01" stroke-width="2.6"/></svg>Orientações
+    </button>
+    <button class="tab" id="tab-editar" role="tab" data-tab="editar" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>Editar
+    </button>
+  </div>
+</nav>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- plano original (PDF de 15/10/2026) ---------- */
+const CHOC="Pode incluir 20 g de chocolate no almoço ou no jantar (marque no fim da lista).";
+const DEFAULT_PLAN={
+ v:1, person:"Suélen", date:"15/10/2026", water:3000,
+ meals:[
+  {id:"cafe",name:"Café da manhã",note:"",options:[
+   {id:"c1",title:"Pão, proteína e fruta",items:["1 fatia de pão","2 ovos|50 g de frango|50 g de patinho moído|1 YoPRO (23 g de proteína)","1 fatia de queijo muçarela|20 g de requeijão light|20 g de ricota|20 g de queijo branco|20 g de geleia zero","1 porção de fruta"],tables:["frutas:1"],how:""},
+   {id:"c2",title:"Cappuccino proteico",items:["1 cappuccino proteico","1 fatia de pão","20 g de geleia zero"],tables:[],how:"Ingredientes: 1 dose de whey, café passado ou solúvel a gosto, 100 ml de leite desnatado.\nPrepare o café, acrescente o whey e o leite. Misture bem ou bata rapidinho com o mixer para ficar mais cremoso."}
+  ]},
+  {id:"almoco",name:"Almoço",note:CHOC,options:[
+   {id:"a1",title:"Prato montado",open:true,items:["1 porção de carboidrato","1 porção de proteína","Legumes à vontade"],tables:["carbos:1","prots:1"],how:""}
+  ]},
+  {id:"lanche1",name:"Lanche 1",note:"",options:[
+   {id:"l1",title:"Fruta com aveia ou chia",items:["1 porção de fruta","20 g de aveia|1 colher de chá de chia"],tables:["frutas:1"],how:""}
+  ]},
+  {id:"lanche2",name:"Lanche 2",note:"",options:[
+   {id:"m1",title:"Iogurte proteico crocante",items:["200 ml de iogurte Batavo Pense Zero","1 dose de whey","1 porção de fruta (sugestão: uvas congeladas)","1 pacotinho de Magic Toast","1 fio de mel"],tables:["frutas:1"],how:"Misture o iogurte com o whey até virar um creme homogêneo. Acrescente a fruta (uvas congeladas deixam bem refrescante) e quebre o Magic Toast por cima para dar crocância. Finalize com um fio pequeno de mel."},
+   {id:"m2",title:"Crepioca de frango",items:["1 ovo","30 g de tapioca","50 g de frango desfiado","20 g de requeijão light|30 g de ricota","Temperos a gosto"],tables:[],how:"Misture o ovo com a tapioca e despeje numa frigideira antiaderente. Cozinhe em fogo baixo até firmar e vire para dourar o outro lado. Misture o frango desfiado com o requeijão ou a ricota, tempere, recheie a crepioca, dobre ao meio e sirva."},
+   {id:"m3",title:"Sanduíche natural proteico",items:["2 fatias de pão|2 bolachas de arroz grandes","20 g de requeijão light","80 g de frango desfiado|80 g de patinho moído|80 g de atum","Alface e tomate a gosto"],tables:[],how:"Recheie o pão com a proteína escolhida, o requeijão, a alface e o tomate."},
+   {id:"m4",title:"Pizza aberta na air fryer",items:["2 fatias de pão|1 pão cacetinho","80 g de frango desfiado|80 g de patinho moído|80 g de atum","20 g de requeijão light|creme de ricota","Tomate e orégano"],tables:[],how:"Monte a pizza sobre o pão e leve à air fryer a 180 °C por 5 a 7 minutos, até ficar crocante."},
+   {id:"m5",title:"Pão com geleia e whey",items:["1 fatia de pão","20 g de geleia zero","1 dose de whey"],tables:[],how:""}
+  ]},
+  {id:"jantar",name:"Jantar",note:CHOC,options:[
+   {id:"j1",title:"Prato montado",open:true,items:["1 porção de carboidrato","1 porção de proteína","Legumes à vontade","10 ml de azeite de oliva"],tables:["carbos:2","prots:2"],how:""},
+   {id:"j2",title:"Rap10 recheado",items:["1 Rap10 integral|1 pão de padaria","Recheio de frango cremoso|recheio de carne moída"],tables:[],how:"Frango cremoso: 100 g de frango desfiado, 20 g de requeijão light, alface e tomate. Misture o frango com o requeijão, recheie o Rap10 e finalize com alface e tomate.\nCarne moída rápida: 100 g de patinho moído, cebola, alho, tomate e alface. Refogue o patinho com cebola e alho, recheie o Rap10 e finalize com tomate e alface."},
+   {id:"j3",title:"Hambúrguer caseiro fit",items:["100 g de patinho moído","1 pão de hambúrguer","15 g de requeijão light","Alface e tomate à vontade","Alho, cebola e temperos naturais a gosto"],tables:[],how:"Tempere o patinho com alho, cebola e temperos naturais. Modele o hambúrguer e grelhe em frigideira antiaderente até dourar dos dois lados. Monte no pão com o requeijão light, alface e tomate."},
+   {id:"j4",title:"Omelete proteico",items:["2 ovos inteiros","50 g de frango desfiado","20 g de requeijão light|creme de ricota","Tomate, cebola e temperos naturais a gosto"],tables:[],how:"Bata os ovos e tempere. Despeje numa frigideira antiaderente em fogo baixo. Quando começar a firmar, acrescente o frango e o requeijão (ou creme de ricota). Dobre ao meio e deixe dourar dos dois lados."},
+   {id:"j5",title:"Guacamole com salmão",items:["180 g de salmão grelhado","50 g de abacate","Tomate e cebola picados a gosto","Suco de limão","Cheiro-verde ou coentro a gosto","Pimenta e temperos naturais a gosto"],tables:[],how:"Amasse o abacate e misture com tomate, cebola, limão e temperos para formar o guacamole. Grelhe o salmão numa frigideira antiaderente e sirva com o guacamole."},
+   {id:"j6",title:"Poke proteico",items:["75 g de arroz cozido","180 g de salmão|180 g de tilápia|180 g de camarão","Folhas e legumes à vontade (pepino, cenoura, tomate, repolho)","Gergelim a gosto","Shoyu light, só um pouco"],tables:[],how:"Coloque o arroz no fundo de uma tigela, junte a proteína já pronta e distribua os vegetais por cima. Finalize com gergelim e um pouco de shoyu light."}
+  ]}
+ ],
+ extras:[{id:"chocolate",name:"20 g de chocolate",sub:"No almoço ou no jantar"}],
+ tables:[
+  {id:"frutas",title:"Frutas",cols:["Fruta","Quantidade"],note:"Usada no café da manhã, no Lanche 1 e no iogurte do Lanche 2.",rows:[["Banana","100 g"],["Laranja","200 g"],["Maçã","130 g"],["Mamão","200 g"],["Manga","130 g"],["Melancia","300 g"],["Melão","300 g"],["Morango","300 g"],["Pera","150 g"],["Bergamota","250 g"],["Pêssego","250 g"],["Uva","200 g"]]},
+  {id:"carbos",title:"Carboidratos",cols:["Alimento","Almoço","Jantar"],note:"No jantar a porção é maior que no almoço.",rows:[["Arroz","50 g","75 g"],["Massa","45 g","65 g"],["Batata inglesa","115 g","170 g"],["Batata-doce","75 g","110 g"],["Arroz + feijão","40 g + 20 g","60 g + 30 g"],["Moranga cabotiá","125 g","185 g"]]},
+  {id:"prots",title:"Proteínas",cols:["Alimento","Almoço","Jantar"],note:"Camarão está na lista do almoço e no poke do jantar.",rows:[["Filé de frango","100 g","100 g"],["Patinho","100 g","100 g"],["Tilápia","120 g","120 g"],["Filé bovino","100 g","100 g"],["Filé suíno","100 g","100 g"],["Salmão","120 g","120 g"],["Camarão","120 g",""]]}
+ ],
+ dicas:[
+  ["Óleo","Evitar excesso de óleo no preparo dos alimentos."],
+  ["Molhos","Evitar molhos: molho de queijo, creme de leite, molhos prontos, molho na salada."],
+  ["Água","Beber no mínimo 3 litros de água por dia."],
+  ["Proteína primeiro","Se não conseguir comer toda a quantidade, sempre priorize a proteína."],
+  ["Refrigerante","Se tomar, use a versão zero."],
+  ["Suco de fruta","Evitar, ou tomar pouca quantidade. É bem calórico."],
+  ["Beliscar","Evitar beliscar fora de horário."],
+  ["Lanches","Consumir lanches 1 a 2 vezes por semana, no máximo."]
+ ]
+};
+const CUP=250, NCUPS=12;
+
+/* ---------- utilitários ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const fromIso=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const litros=ml=>(ml/1000).toLocaleString("pt-BR",{maximumFractionDigits:2})+" L";
+const clone=o=>JSON.parse(JSON.stringify(o));
+const newId=()=>Math.random().toString(36).slice(2,8);
+const CHECK='<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const CHEV='<svg class="chev" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>{t.hidden=true},2200);}
+
+/* ---------- armazenamento no aparelho ---------- */
+const LS="plano-alimentar-v1";
+const load=(k,f)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?f:v}catch(e){return f}};
+const store=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
+const validPlan=p=>p&&typeof p==="object"&&Array.isArray(p.meals)&&Array.isArray(p.tables)&&Array.isArray(p.dicas);
+let plan=load(LS+":plan",null); if(!validPlan(plan)) plan=clone(DEFAULT_PLAN);
+plan.extras=Array.isArray(plan.extras)?plan.extras:[];
+let days=load(LS+":days",{}); if(!days||typeof days!=="object") days={};
+const savePlan=()=>store(LS+":plan",plan);
+const saveDays=()=>store(LS+":days",days);
+
+let today=iso(new Date()), sel=today, openMeal=null, tab="hoje";
+const detState=new Map();
+
+function getDay(d){
+  const r=days[d]||{};
+  return {m:(r.m&&typeof r.m==="object")?Object.assign({},r.m):{},x:(r.x&&typeof r.x==="object")?Object.assign({},r.x):{},w:Math.max(0,Math.min(6000,Number(r.w)||0))};
+}
+const doneCount=v=>plan.meals.filter(m=>v.m[m.id]).length;
+function update(fn){const v=getDay(sel);fn(v);days[sel]=v;saveDays();renderHoje();}
+
+/* ---------- tabelas ---------- */
+function tableRef(ref){const [id,c]=String(ref).split(":");const t=plan.tables.find(x=>x.id===id);if(!t)return null;const col=Math.min(Math.max(1,Number(c)||1),Math.max(1,t.cols.length-1));return {t,col};}
+function refLabel(ref){const r=tableRef(ref);if(!r)return "";return r.t.title+(r.t.cols.length>2&&r.t.cols[r.col]?" · "+r.t.cols[r.col].toLowerCase():"");}
+function allRefs(){const out=[];plan.tables.forEach(t=>{for(let c=1;c<Math.max(2,t.cols.length);c++)out.push(t.id+":"+c)});return out;}
+function portions(ref){
+  const r=tableRef(ref); if(!r) return "";
+  const rows=r.t.rows.filter(x=>x[0]&&x[r.col]);
+  return '<ul class="portions'+(r.t.cols.length===2&&rows.length>6?" two":"")+'">'+rows.map(x=>"<li><span>"+esc(x[0])+"</span><b>"+esc(x[r.col])+"</b></li>").join("")+"</ul>";
+}
+
+/* ---------- render: hoje ---------- */
+function qty(a){const m=a.match(/^(\d+(?:[.,]\d+)?(?:\s?(?:g|ml|kg|l)\b)?)(.*)$/i);return m?'<b class="q">'+esc(m[1])+"</b>"+esc(m[2]):esc(a)}
+const itemHTML=s=>String(s).split("|").map((a,i)=>(i?'<span class="ou">ou</span>':"")+qty(a.trim())).join(" ");
+function howHTML(txt){
+  return '<div class="how">'+String(txt).split(/\n+/).filter(p=>p.trim()).map(p=>{const m=p.match(/^([^:.]{2,40}):\s*(.+)$/);return "<p>"+(m?"<b>"+esc(m[1])+":</b> "+esc(m[2]):esc(p))+"</p>"}).join("")+"</div>";
+}
+function det(key,label,inner,dflt){
+  const open=detState.has(key)?detState.get(key):!!dflt;
+  return '<details class="more" data-k="'+esc(key)+'"'+(open?" open":"")+"><summary>"+esc(label)+"</summary>"+inner+"</details>";
+}
+function optHTML(m,o,chosen){
+  let h='<article class="opt'+(chosen?" chosen":"")+'"><h3>'+esc(o.title||"Opção")+'</h3><ul class="items">'+(o.items||[]).map(i=>"<li>"+itemHTML(i)+"</li>").join("")+"</ul>";
+  (o.tables||[]).forEach(ref=>{if(tableRef(ref))h+=det(o.id+"-"+ref,"Ver tabela: "+refLabel(ref),portions(ref),o.open)});
+  if(o.how&&o.how.trim()) h+=det(o.id+"-how","Modo de preparo",howHTML(o.how),false);
+  h+='<button class="pick" data-act="pick" data-meal="'+esc(m.id)+'" data-opt="'+esc(o.id)+'" data-key="pick-'+esc(o.id)+'" aria-pressed="'+chosen+'">'+(chosen?CHECK:"")+"Comi esta opção</button></article>";
+  return h;
+}
+let installEvt=null;
+const isStandalone=()=>(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true;
+const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+function installHTML(){
+  if(isStandalone()||load(LS+":noinstall",false)) return "";
+  let msg;
+  if(installEvt) msg="<p>Instale o app na tela inicial para abrir com um toque, mesmo sem internet.</p><div class=\"row\"><button class=\"btn solid small\" data-act=\"install\">Instalar app</button><button class=\"btn ghost small\" data-act=\"noinstall\">Agora não</button></div>";
+  else if(isIOS()) msg="<p><b>Instalar no iPhone:</b> no Safari, toque em Compartilhar (o quadrado com a seta) e depois em <b>Adicionar à Tela de Início</b>.</p><div class=\"row\"><button class=\"btn ghost small\" data-act=\"noinstall\">Entendi</button></div>";
+  else msg="<p><b>Instalar no Android:</b> no Chrome, abra o menu ⋮ e toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</p><div class=\"row\"><button class=\"btn ghost small\" data-act=\"noinstall\">Entendi</button></div>";
+  return '<div class="install">'+msg+"</div>";
+}
+function renderHoje(){
+  const focusKey=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.key:null;
+  const v=getDay(sel), isToday=sel===today, dt=fromIso(sel), total=plan.meals.length||1;
+  const longDate=cap(dt.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"}));
+  const C=2*Math.PI*16;
+  let week="";
+  for(let i=6;i>=0;i--){
+    const d=addDays(fromIso(today),-i), k=iso(d), n=Math.min(total,doneCount(getDay(k)));
+    const wd=i===0?"hoje":d.toLocaleDateString("pt-BR",{weekday:"short"}).replace(".","");
+    week+='<button class="day" data-act="day" data-day="'+k+'" data-key="day-'+k+'" aria-pressed="'+(k===sel)+'" aria-label="'+esc(d.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"}))+": "+n+" de "+total+' refeições"><span class="wd">'+esc(wd)+'</span><span class="ring"><svg viewBox="0 0 38 38" aria-hidden="true"><circle class="ring-bg" cx="19" cy="19" r="16"/>'+(n?'<circle class="ring-fg" cx="19" cy="19" r="16" stroke-dasharray="'+(C*n/total).toFixed(2)+" "+C.toFixed(2)+'" transform="rotate(-90 19 19)"/>':"")+"</svg><b>"+d.getDate()+"</b></span></button>";
+  }
+  const meals=plan.meals.map(m=>{
+    const val=v.m[m.id], opt=val&&m.options.find(o=>o.id===val), open=openMeal===m.id;
+    const sub=val?(opt?opt.title:"Feito"):(m.options.length===1?m.options[0].title:m.options.length+" opções");
+    return '<div class="meal'+(val?" done":"")+'"><div class="meal-head">'+
+      '<button class="check" data-act="check" data-meal="'+esc(m.id)+'" data-key="check-'+esc(m.id)+'" aria-pressed="'+!!val+'" aria-label="'+esc(m.name)+' feito"><span class="dot">'+CHECK+"</span></button>"+
+      '<button class="meal-open" data-act="open" data-meal="'+esc(m.id)+'" data-key="open-'+esc(m.id)+'" aria-expanded="'+open+'"><span class="meal-txt"><span class="meal-name">'+esc(m.name)+'</span><span class="meal-sub">'+esc(sub)+"</span></span>"+CHEV+"</button></div>"+
+      '<div class="meal-body"'+(open?"":" hidden")+">"+m.options.map(o=>optHTML(m,o,val===o.id)).join("")+(m.note?'<p class="note">'+esc(m.note)+"</p>":"")+"</div></div>";
+  }).join("")+plan.extras.map(x=>{const on=!!v.x[x.id];return '<div class="meal extra'+(on?" done":"")+'"><div class="meal-head"><button class="check" data-act="extra" data-x="'+esc(x.id)+'" data-key="x-'+esc(x.id)+'" aria-pressed="'+on+'" aria-label="'+esc(x.name)+'"><span class="dot">'+CHECK+'</span></button><span class="meal-txt"><span class="meal-name">'+esc(x.name)+'</span><span class="meal-sub">'+esc(on?"Feito":(x.sub||"Extra do dia"))+"</span></span></div></div>"}).join("");
+
+  const w=v.w, goal=plan.water||3000, left=goal-w;
+  let cups="";
+  for(let i=1;i<=NCUPS;i++) cups+='<button class="cup'+(w>=i*CUP?" full":"")+'" data-act="cup" data-i="'+i+'" data-key="cup-'+i+'" aria-label="'+litros(i*CUP)+'"><svg viewBox="0 0 24 30" aria-hidden="true"><path d="M3 3H21L19 27H5Z"/></svg></button>';
+
+  $("#view-hoje").innerHTML=
+    '<header class="top"><p class="eyebrow">Plano alimentar · '+esc(plan.person)+(isToday?"":" · outro dia")+"</p><h1>"+esc(isToday?"Hoje, "+longDate.replace(/^[^,]+,\s*/,""):longDate)+"</h1>"+
+    (isToday?"":'<button class="chip" data-act="today" data-key="today">Voltar para hoje</button>')+
+    installHTML()+'<div class="week">'+week+"</div></header>"+
+    '<div class="sec-head"><h2>Refeições</h2><span class="count"><b>'+doneCount(v)+"</b> de "+plan.meals.length+"</span></div>"+
+    '<div class="meals">'+meals+"</div>"+
+    '<div class="sec-head"><h2>Água</h2><span class="count">meta '+esc(litros(goal))+"</span></div>"+
+    '<div class="water"><div class="water-top"><div class="water-num">'+esc(litros(w).replace(" L",""))+" <small>L</small></div>"+
+    '<div class="water-left">'+(left>0?"faltam <b>"+esc(litros(left))+"</b>":"<b>Meta batida</b>")+"</div></div>"+
+    '<div class="cups">'+cups+"</div>"+
+    '<div class="water-actions"><button class="wbtn minus" data-act="water" data-d="-250" data-key="w-minus" aria-label="Tirar 250 ml">−</button><button class="wbtn" data-act="water" data-d="250" data-key="w-250">+ 250 ml</button><button class="wbtn" data-act="water" data-d="500" data-key="w-500">+ 500 ml</button></div>'+
+    '<p class="hint">Cada copo vale 250 ml. Toque num copo para marcar até ele.</p></div>'+
+    '<p class="foot">Tudo fica salvo neste celular, sem login.'+(plan.date?" Plano de "+esc(plan.date)+".":"")+"</p>";
+
+  if(focusKey){const el=document.querySelector('[data-key="'+CSS.escape(focusKey)+'"]');if(el)el.focus({preventScroll:true});}
+}
+
+/* ---------- render: trocas e orientações ---------- */
+function renderTrocas(){
+  $("#view-trocas").innerHTML=
+    '<header class="top"><p class="eyebrow">Plano alimentar · '+esc(plan.person)+'</p><h1>Trocas</h1><p class="lead">Cada linha vale 1 porção. Dá para trocar um alimento por outro da mesma lista usando a quantidade indicada.</p></header>'+
+    plan.tables.map(t=>{
+      const vc=t.cols.slice(1);
+      return '<div class="sec-head"><h2>'+esc(t.title)+'</h2><span class="count">1 porção</span></div><div class="card"><div class="tbl-wrap"><table><thead><tr><th>'+esc(t.cols[0]||"Alimento")+"</th>"+vc.map(c=>'<th class="n">'+esc(c)+"</th>").join("")+"</tr></thead><tbody>"+
+        t.rows.filter(r=>r[0]).map(r=>"<tr><td>"+esc(r[0])+"</td>"+vc.map((_,i)=>r[i+1]?'<td class="n">'+esc(r[i+1])+"</td>":'<td class="n none">—</td>').join("")+"</tr>").join("")+
+        "</tbody></table></div></div>"+(t.note?'<p class="sec-note">'+esc(t.note)+"</p>":"");
+    }).join("");
+}
+function renderDicas(){
+  $("#view-dicas").innerHTML=
+    '<header class="top"><p class="eyebrow">Plano alimentar · '+esc(plan.person)+'</p><h1>Orientações</h1></header>'+
+    '<div class="sec-head"><h2>No dia a dia</h2></div>'+
+    '<div class="card"><ul class="rules">'+plan.dicas.map(([a,b])=>"<li><b>"+esc(a)+"</b>"+(b?"<span>"+esc(b)+"</span>":"")+"</li>").join("")+"</ul></div>";
+}
+
+/* ---------- render: editor ---------- */
+const itemsToText=items=>(items||[]).map(s=>String(s).split("|").join(" ou ")).join("\n");
+const textToItems=txt=>txt.split("\n").map(l=>l.trim()).filter(Boolean).map(l=>l.split(/\s+ou\s+/i).map(s=>s.trim()).filter(Boolean).join("|"));
+const rowsToText=rows=>rows.map(r=>r.map(c=>c||"-").join("; ")).join("\n");
+const textToRows=txt=>txt.split("\n").map(l=>l.trim()).filter(Boolean).map(l=>l.split(";").map(c=>{c=c.trim();return (c==="-"||c==="—")?"":c}));
+let restoreArmed=false;
+function renderEditor(){
+  const refs=allRefs();
+  const f=(label,ed,val,attrs,hint)=>'<label class="f">'+label+(hint?" <small>"+hint+"</small>":"")+'<input class="t" data-ed="'+ed+'" value="'+esc(val)+'" '+(attrs||"")+"></label>";
+  const ta=(label,ed,val,attrs,hint,rows)=>'<label class="f">'+label+(hint?" <small>"+hint+"</small>":"")+'<textarea class="t" rows="'+(rows||4)+'" data-ed="'+ed+'" '+(attrs||"")+">"+esc(val)+"</textarea></label>";
+  let h='<header class="top"><p class="eyebrow">Plano alimentar · '+esc(plan.person)+'</p><h1>Editar plano</h1><p class="lead">As mudanças são salvas sozinhas neste celular. Para passar o plano para outro celular, use o backup no fim da página.</p></header><div class="ed">';
+  h+='<div class="sec-head"><h2>Geral</h2></div><div class="ed-card">'+f("Nome","person",plan.person)+'<div class="grid2">'+f("Data do plano","date",plan.date)+f("Meta de água (litros)","water",String((plan.water||3000)/1000).replace(".",","),'inputmode="decimal"')+"</div></div>";
+  h+='<div class="sec-head"><h2>Refeições</h2></div>';
+  plan.meals.forEach((m,mi)=>{
+    const k="ed-meal-"+m.id, open=detState.get(k)||false;
+    h+='<details class="ed-meal" data-k="'+esc(k)+'"'+(open?" open":"")+'><summary>'+esc(m.name||"Refeição")+"<span>"+m.options.length+(m.options.length===1?" opção":" opções")+'</span></summary><div class="ed-meal-body">'+
+      f("Nome da refeição","meal-name",m.name,'data-mi="'+mi+'"')+
+      f("Observação","meal-note",m.note||"",'data-mi="'+mi+'"',"(opcional)");
+    m.options.forEach((o,oi)=>{
+      const at='data-mi="'+mi+'" data-oi="'+oi+'"';
+      h+='<div class="ed-opt"><div class="ed-opt-head">Opção '+(oi+1)+'<button class="btn ghost small" data-act="del-opt" '+at+">Remover</button></div>"+
+        f("Nome da opção","opt-title",o.title,at)+
+        ta("O que comer","opt-items",itemsToText(o.items),at,"um item por linha; escreva “ou” entre alternativas",5)+
+        ta("Modo de preparo","opt-how",o.how||"",at,"(opcional)",3)+
+        (refs.length?'<div class="f">Mostrar tabela de troca<div class="checks">'+refs.map(r=>'<label><input type="checkbox" data-ed="opt-table" value="'+esc(r)+'" '+at+((o.tables||[]).includes(r)?" checked":"")+">"+esc(refLabel(r))+"</label>").join("")+"</div></div>":"")+
+        "</div>";
+    });
+    h+='<div class="row"><button class="btn small" data-act="add-opt" data-mi="'+mi+'">+ Adicionar opção</button><button class="btn ghost small" data-act="up-meal" data-mi="'+mi+'"'+(mi===0?" disabled":"")+'>Subir</button><button class="btn ghost small" data-act="del-meal" data-mi="'+mi+'">Remover refeição</button></div></div></details>';
+  });
+  h+='<div class="row"><button class="btn" data-act="add-meal">+ Adicionar refeição</button></div>';
+  h+='<div class="sec-head"><h2>Extras do dia</h2></div><div class="ed-card">'+ta("Itens marcáveis fora das refeições","extras",plan.extras.map(x=>x.name+(x.sub?": "+x.sub:"")).join("\n"),"","um por linha, no formato Nome: detalhe",3)+"</div>";
+  h+='<div class="sec-head"><h2>Tabelas de troca</h2></div>';
+  plan.tables.forEach((t,ti)=>{
+    const at='data-ti="'+ti+'"';
+    h+='<div class="ed-card">'+f("Título","tbl-title",t.title,at)+f("Colunas","tbl-cols",t.cols.join("; "),at,"separadas por ponto e vírgula")+
+      ta("Linhas","tbl-rows",rowsToText(t.rows),at,"uma por linha, colunas separadas por ponto e vírgula; use - quando não tiver",Math.min(12,t.rows.length+1))+
+      f("Observação","tbl-note",t.note||"",at,"(opcional)")+
+      '<div class="row"><button class="btn ghost small" data-act="del-table" '+at+">Remover tabela</button></div></div>";
+  });
+  h+='<div class="row"><button class="btn" data-act="add-table">+ Adicionar tabela</button></div>';
+  h+='<div class="sec-head"><h2>Orientações</h2></div><div class="ed-card">'+ta("Uma por linha","dicas",plan.dicas.map(d=>d[0]+(d[1]?": "+d[1]:"")).join("\n"),"","no formato Título: texto",9)+"</div>";
+  h+='<div class="sec-head"><h2>Backup</h2></div><div class="ed-card"><p class="lead" style="margin:0">Salve um arquivo com o plano e o histórico. Para usar em outro celular, envie o arquivo (por WhatsApp, por exemplo) e importe lá.</p>'+
+    '<div class="row"><button class="btn solid" data-act="export">Exportar backup</button><button class="btn" data-act="import">Importar backup</button><input type="file" id="importFile" accept="application/json,.json" hidden></div>'+
+    '<div class="row"><button class="btn ghost" data-act="restore">'+(restoreArmed?"Toque de novo para confirmar":"Voltar ao plano original")+"</button></div></div>";
+  h+="</div>";
+  $("#view-editar").innerHTML=h;
+}
+function renderAll(){renderHoje();renderTrocas();renderDicas();renderEditor();}
+let saveT=null;
+function planChanged(full){
+  clearTimeout(saveT); saveT=setTimeout(()=>{if(!savePlan())toast("Não consegui salvar neste navegador")},300);
+  renderHoje();renderTrocas();renderDicas();
+  if(full) renderEditor();
+}
+
+/* ---------- abas ---------- */
+const TABS=["hoje","trocas","dicas","editar"];
+function setTab(t,scroll){
+  tab=t;
+  TABS.forEach(id=>{$("#view-"+id).hidden=id!==t;$("#tab-"+id).setAttribute("aria-selected",String(id===t));});
+  store(LS+":tab",t);
+  if(scroll) window.scrollTo(0,0);
+}
+
+/* ---------- interações ---------- */
+document.addEventListener("click",async e=>{
+  const tabBtn=e.target.closest("[data-tab]");
+  if(tabBtn){setTab(tabBtn.dataset.tab,true);return}
+  const b=e.target.closest("[data-act]"); if(!b||b.disabled) return;
+  const a=b.dataset.act, mid=b.dataset.meal, mi=Number(b.dataset.mi), oi=Number(b.dataset.oi), ti=Number(b.dataset.ti);
+  switch(a){
+  case "open":{
+    openMeal=openMeal===mid?null:mid; renderHoje();
+    const el=document.querySelector('[data-key="open-'+CSS.escape(mid)+'"]'); if(el&&openMeal) el.scrollIntoView({block:"nearest",behavior:"smooth"});
+    break;}
+  case "check":{
+    const m=plan.meals.find(x=>x.id===mid);
+    update(v=>{if(v.m[mid]) delete v.m[mid]; else v.m[mid]=m&&m.options.length===1?m.options[0].id:"x";});
+    break;}
+  case "pick":{
+    const oid=b.dataset.opt; let picked=false;
+    update(v=>{if(v.m[mid]===oid) delete v.m[mid]; else {v.m[mid]=oid;picked=true}});
+    if(picked) setTimeout(()=>{if(openMeal!==mid) return; openMeal=null; renderHoje();
+      const el=document.querySelector('[data-key="open-'+CSS.escape(mid)+'"]'); if(el){el.focus({preventScroll:true});el.scrollIntoView({block:"nearest",behavior:"smooth"});}},450);
+    break;}
+  case "extra":{const id=b.dataset.x;update(v=>{if(v.x[id]) delete v.x[id]; else v.x[id]=true});break;}
+  case "cup":{const i=Number(b.dataset.i);update(v=>{v.w=v.w===i*CUP?(i-1)*CUP:i*CUP});break;}
+  case "water":{const d=Number(b.dataset.d);update(v=>{v.w=Math.max(0,Math.min(6000,v.w+d))});break;}
+  case "day":sel=b.dataset.day;openMeal=null;renderHoje();break;
+  case "today":sel=today;openMeal=null;renderHoje();break;
+  case "install":
+    if(installEvt){installEvt.prompt();try{await installEvt.userChoice}catch(_){}installEvt=null;renderHoje();}
+    break;
+  case "noinstall":store(LS+":noinstall",true);renderHoje();break;
+  /* editor */
+  case "add-opt":plan.meals[mi].options.push({id:newId(),title:"Nova opção",items:[],tables:[],how:""});detState.set("ed-meal-"+plan.meals[mi].id,true);planChanged(true);break;
+  case "del-opt":plan.meals[mi].options.splice(oi,1);planChanged(true);toast("Opção removida");break;
+  case "add-meal":{const m={id:newId(),name:"Nova refeição",note:"",options:[{id:newId(),title:"Opção 1",items:[],tables:[],how:""}]};plan.meals.push(m);detState.set("ed-meal-"+m.id,true);planChanged(true);break;}
+  case "del-meal":plan.meals.splice(mi,1);planChanged(true);toast("Refeição removida");break;
+  case "up-meal":if(mi>0){const [m]=plan.meals.splice(mi,1);plan.meals.splice(mi-1,0,m);planChanged(true);}break;
+  case "add-table":plan.tables.push({id:newId(),title:"Nova tabela",cols:["Alimento","Quantidade"],note:"",rows:[]});planChanged(true);break;
+  case "del-table":{const id=plan.tables[ti].id;plan.tables.splice(ti,1);plan.meals.forEach(m=>m.options.forEach(o=>{o.tables=(o.tables||[]).filter(r=>r.split(":")[0]!==id)}));planChanged(true);toast("Tabela removida");break;}
+  case "export":{
+    const data=JSON.stringify({app:"plano-alimentar",v:1,exported:new Date().toISOString(),plan,days},null,1);
+    const name="plano-"+(plan.person||"backup").toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g,"-")+"-"+today+".json";
+    const file=new File([data],name,{type:"application/json"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:"Backup do plano"});break;}catch(err){if(err&&err.name==="AbortError")break;}}
+    const url=URL.createObjectURL(file);const aEl=document.createElement("a");aEl.href=url;aEl.download=name;document.body.appendChild(aEl);aEl.click();aEl.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
+    toast("Backup salvo");break;}
+  case "import":$("#importFile").click();break;
+  case "restore":
+    if(!restoreArmed){restoreArmed=true;renderEditor();setTimeout(()=>{if(restoreArmed){restoreArmed=false;if(tab==="editar")renderEditor();}},4000);}
+    else{restoreArmed=false;plan=clone(DEFAULT_PLAN);planChanged(true);toast("Plano original restaurado");}
+    break;
+  }
+});
+document.addEventListener("input",e=>{
+  const el=e.target, ed=el.dataset&&el.dataset.ed; if(!ed) return;
+  const mi=Number(el.dataset.mi), oi=Number(el.dataset.oi), ti=Number(el.dataset.ti), val=el.value;
+  const m=plan.meals[mi], o=m&&m.options[oi], t=plan.tables[ti];
+  switch(ed){
+    case "person":plan.person=val.trim();break;
+    case "date":plan.date=val.trim();break;
+    case "water":{const n=parseFloat(val.replace(",","."));if(n>0&&n<=8)plan.water=Math.round(n*1000);break;}
+    case "meal-name":m.name=val;{const s=el.closest("details");if(s)s.querySelector("summary").firstChild.textContent=val||"Refeição";}break;
+    case "meal-note":m.note=val.trim();break;
+    case "opt-title":o.title=val;break;
+    case "opt-items":o.items=textToItems(val);break;
+    case "opt-how":o.how=val;break;
+    case "opt-table":{const set=new Set(o.tables||[]);el.checked?set.add(el.value):set.delete(el.value);o.tables=allRefs().filter(r=>set.has(r));break;}
+    case "extras":plan.extras=val.split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{const i=l.indexOf(":");const name=(i>0?l.slice(0,i):l).trim();return {id:name.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g,"-"),name,sub:i>0?l.slice(i+1).trim():""}});break;
+    case "tbl-title":t.title=val;break;
+    case "tbl-cols":{const c=val.split(";").map(s=>s.trim()).filter(Boolean);if(c.length)t.cols=c;break;}
+    case "tbl-rows":t.rows=textToRows(val);break;
+    case "tbl-note":t.note=val.trim();break;
+    case "dicas":plan.dicas=val.split("\n").map(l=>l.trim()).filter(Boolean).map(l=>{const i=l.indexOf(":");return i>0?[l.slice(0,i).trim(),l.slice(i+1).trim()]:[l,""]});break;
+    default:return;
+  }
+  planChanged(false);
+});
+document.addEventListener("change",e=>{
+  const el=e.target;
+  if(el.id==="importFile"&&el.files&&el.files[0]){
+    const r=new FileReader();
+    r.onload=()=>{
+      try{
+        const d=JSON.parse(r.result);
+        if(!d||!validPlan(d.plan)) throw new Error("bad");
+        plan=d.plan; plan.extras=Array.isArray(plan.extras)?plan.extras:[];
+        if(d.days&&typeof d.days==="object"){Object.keys(d.days).forEach(k=>{if(/^\d{4}-\d{2}-\d{2}$/.test(k))days[k]=d.days[k]});saveDays();}
+        savePlan(); renderAll(); toast("Backup importado");
+      }catch(err){toast("Esse arquivo não é um backup do plano");}
+      el.value="";
+    };
+    r.readAsText(el.files[0]);
+  }
+});
+document.addEventListener("toggle",e=>{const k=e.target&&e.target.dataset&&e.target.dataset.k;if(k)detState.set(k,e.target.open)},true);
+function checkDate(){const t=iso(new Date());if(t!==today){if(sel===today)sel=t;today=t;renderHoje();}}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkDate()});
+window.addEventListener("focus",checkDate);
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;renderHoje();});
+window.addEventListener("appinstalled",()=>{installEvt=null;store(LS+":noinstall",true);renderHoje();});
+
+/* ---------- início ---------- */
+renderAll();
+const startTab=load(LS+":tab","hoje");
+setTab(TABS.includes(startTab)?startTab:"hoje",false);
+if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost")){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+})();
+</script>
+</body>
+</html>
